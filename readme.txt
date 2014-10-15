@@ -1,4 +1,4 @@
-Strip lightbox Plugin for WordPress
+Strip Lightbox Plugin for WordPress
 ====================================
 
 This plugin will implement the strip lightbox into WordPress
