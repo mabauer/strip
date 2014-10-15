@@ -21,10 +21,9 @@ Custom Styling for Images:
 
 If you wish to customize the styling of the images, edit custom.css in the css directory
 
-Notes:
-
+Extras:
 This plugin supports the video thumbnails plugin for automatic video thumbnails.
 
-Todo:
+Notice: If you plan on using this on a commercial site please purchase a commercial license.
 
-Add custom styling via Options Panel
+See: http://stripjs.com/license
