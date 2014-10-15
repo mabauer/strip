@@ -17,6 +17,14 @@ How to use this Plugin for YouTube and Vimeo Videos:
 1. Paste the url to the YouTube or Vimeo video into a Post
 2. Select an Image to be used as a cover thumbnail for the video
 
+Custom Styling for Images:
+
+If you wish to customize the styling of the images, edit custom.css in the css directory
+
 Notes:
 
 This plugin supports the video thumbnails plugin for automatic video thumbnails.
+
+Todo:
+
+Add custom styling via Options Panel
