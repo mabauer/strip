@@ -46,7 +46,6 @@ if( !class_exists( 'Strip_Lightbox' ) ) {
 
 	class Strip_Lightbox {
 
-
 		/**
  		* Hook into hooks for Register styles, scripts, and shortcode
  		*
@@ -60,6 +59,7 @@ if( !class_exists( 'Strip_Lightbox' ) ) {
 			add_filter( 'media_send_to_editor', array( $this, 'media_filter'), 20, 3);
 			add_action( 'admin_menu', array( $this, 'strip_add_admin_menu' ));
 			add_action( 'admin_init', array( $this, 'strip_settings_init' ));
+			add_action( 'embed_oembed_html', array( $this, 'embed_html' ), 10, 4);
 		}
 
 		/**
@@ -173,6 +173,22 @@ if( !class_exists( 'Strip_Lightbox' ) ) {
 			wp_enqueue_style( 'custom_css', plugins_url( 'css/custom.css', __FILE__ ), false, '1.0', 'screen' );
 		}
 
+        	/**
+         	* filter youtube and vimeo videos for lightbox
+         	*
+         	* @since 1.0
+         	*/
+
+		function embed_html( $html, $url, $args, $post_ID ) {
+
+			$screenshot = wp_get_attachment_url( get_post_thumbnail_id($post_ID) ) ? : 'http://fakeimg.pl/439x230/282828/eae0d0/?text=Click%20to%20Play!';
+
+                        if ( strstr($url, 'youtube.com') || strstr($url, 'vimeo')) {
+      		        	$html = sprintf('<a href="%1$s" class="strip"><img src="%2$s" /></a>', $url, $screenshot);
+        	        }
+
+                     	return $html;
+            	}
 
         	/**
          	* add strip data attributes to images inserted into post
@@ -304,4 +320,6 @@ if( !class_exists( 'Strip_Lightbox' ) ) {
 		}
    	}
 }
+
+
 
