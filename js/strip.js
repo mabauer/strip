@@ -1,5 +1,5 @@
 /*!
- * Strip - A Less Intrusive Responsive Lightbox - v1.1.2
+ * Strip - A Less Intrusive Responsive Lightbox - v1.2.3
  * (c) 2014 Nick Stakenburg
  *
  * http://www.stripjs.com
@@ -23,7 +23,7 @@
 var Strip = {};
 
 $.extend(Strip, {
-  version: '1.1.2'
+  version: '1.2.3'
 });
 
 // unexposed _Skins, for internal use only
@@ -1260,43 +1260,37 @@ $.extend(Page.prototype, {
     Window.stopLoading();
   },
 
+  isVideo: function() {
+    return /^(youtube|vimeo)$/.test(this.view.type);
+  },
 
   insertVideo: function(callback) {
     // don't insert a video twice
-    if (this.playerIframe) {
+    // and stop if not a video
+    if (this.playerIframe || !this.isVideo()) {
       if (callback) callback();
       return;
     }
 
-    switch (this.view.type) {
-      case 'vimeo':
-        var playerVars = $.extend({}, this.view.options.vimeo || {}),
-            queryString = $.param(playerVars);
+    var playerVars = $.extend({}, this.view.options[this.view.type] || {}),
+        queryString = $.param(playerVars),
+        src = {
+          vimeo: '//player.vimeo.com/video/{id}?{queryString}',
+          youtube: '//www.youtube.com/embed/{id}?{queryString}'
+        };
 
-        this.content.append(this.playerIframe = $('<iframe webkitAllowFullScreen mozallowfullscreen allowFullScreen>').attr({
-          src: '//player.vimeo.com/video/' + this.view._data.id + '?' + queryString,
-          height: this.contentDimensions.height,
-          width: this.contentDimensions.width,
-          frameborder: 0
-        }));
+    this.content.append(this.playerIframe = $('<iframe webkitAllowFullScreen mozallowfullscreen allowFullScreen>')
+      .attr({
+        src: src[this.view.type]
+             .replace('{id}', this.view._data.id)
+             .replace('{queryString}', queryString),
+        height: this.contentDimensions.height,
+        width: this.contentDimensions.width,
+        frameborder: 0
+      })
+    );
 
-        if (callback) callback();
-        break;
-
-      case 'youtube':
-        var playerVars = this.view.options.youtube || {},
-            queryString = $.param(playerVars);
-
-        this.content.append(this.playerIframe = $('<iframe webkitAllowFullScreen mozallowfullscreen allowFullScreen>').attr({
-          src: '//www.youtube.com/embed/' + this.view._data.id + '?' + queryString,
-          height: this.contentDimensions.height,
-          width: this.contentDimensions.width,
-          frameborder: 0
-        }));
-
-        if (callback) callback();
-        break;
-    }
+    if (callback) callback();
   },
 
 
@@ -1369,7 +1363,7 @@ $.extend(Page.prototype, {
     }, this));
 
     // vimeo and youtube use this for insertion
-    if (this.view.type == 'vimeo' || this.view.type == 'youtube') {
+    if (this.isVideo()) {
       shq.queue($.proxy(function(next_video_inserted) {
         this.insertVideo($.proxy(function() {
           next_video_inserted();
@@ -1448,7 +1442,7 @@ $.extend(Page.prototype, {
     if ($.type(alternateDuration) == 'number') duration = alternateDuration;
 
     // hide video instantly
-    var isVideo = this.view.type == 'youtube' || this.view.type == 'vimeo';
+    var isVideo = this.isVideo();
     if (isVideo) duration = 0;
 
     // stop, delay & effect
