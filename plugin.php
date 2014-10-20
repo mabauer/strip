@@ -37,7 +37,7 @@ if ( !function_exists( 'strip_lightbox' ) ) {
 }
 
 /**
- * Strip Lightbox Class for scripts, styles, and shortcode
+ * Strip Lightbox Class for scripts, styles, images, and video embeds
  *
  * @since 1.0
  */
@@ -47,7 +47,7 @@ if( !class_exists( 'Strip_Lightbox' ) ) {
 	class Strip_Lightbox {
 
 		/**
- 		* Hook into hooks for Register styles, scripts, and shortcode
+ 		* Hook into hooks for Register styles, scripts, images, and video embeds
  		*
  		* @since 1.0
  		*/
