@@ -181,7 +181,8 @@ if( !class_exists( 'Strip_Lightbox' ) ) {
 
 		function embed_html( $html, $url, $args, $post_ID ) {
 
-			$screenshot = wp_get_attachment_url( get_post_thumbnail_id($post_ID) ) ? wp_get_attachment_url( get_post_thumbnail_id($post_ID) ) : 'http://fakeimg.pl/439x230/282828/eae0d0/?text=Click%20to%20Play!';
+			$thumbnail = wp_get_attachment_url( get_post_thumbnail_id($post_ID) );
+			$screenshot = isset($thumbnail) ? wp_get_attachment_url( get_post_thumbnail_id($post_ID) ) : 'http://fakeimg.pl/439x230/282828/eae0d0/?text=Click%20to%20Play!';
 
                         if ( strstr($url, 'youtube.com') || strstr($url, 'vimeo.com')) {
       		        	$html = sprintf('<a href="%1$s" class="strip"><img src="%2$s" /></a>', $url, $screenshot);
