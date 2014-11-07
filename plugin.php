@@ -60,7 +60,7 @@ if( !class_exists( 'Strip_Lightbox' ) ) {
 			add_action( 'admin_menu', array( $this, 'strip_add_admin_menu' ));
 			add_action( 'admin_init', array( $this, 'strip_settings_init' ));
 			add_action( 'embed_oembed_html', array( $this, 'embed_html' ), 10, 4);
-			wp_embed_register_handler( 'detect_lightbox', '#^http://.+\.(jpe?g|gif|png)$#i', array( $this, 'wp_embed_register_handler') , 10, 3);
+			add_action( 'init', array( $this, 'embeds' ));
 		}
 
 		/**
@@ -172,6 +172,17 @@ if( !class_exists( 'Strip_Lightbox' ) ) {
 		function styles() {
 			wp_enqueue_style( 'strip_css', plugins_url( 'css/strip.css', __FILE__ ), false, '1.0', 'screen' );
 			wp_enqueue_style( 'custom_css', plugins_url( 'css/custom.css', __FILE__ ), false, '1.0', 'screen' );
+		}
+
+		/**
+		 * register oembed for images, and remove imgur.com default embed so lightbox can use imgur.com images
+		 *
+		 * @since 1.0
+		 */
+
+		function embeds() { 
+			wp_embed_register_handler( 'detect_lightbox', '#^http://.+\.(jpe?g|gif|png)$#i', array( $this, 'wp_embed_register_handler') , 10, 3);
+			wp_oembed_remove_provider( '#https?://(.+\.)?imgur\.com/.*#i' );
 		}
 
         	/**
