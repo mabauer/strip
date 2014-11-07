@@ -56,10 +56,11 @@ if( !class_exists( 'Strip_Lightbox' ) ) {
 			add_action( 'wp_enqueue_scripts', array( $this, 'scripts' ) );
 			add_action( 'wp_enqueue_scripts', array( $this, 'styles' ) );
 			add_filter( 'post_gallery', array( $this, 'gallery'), 10, 2 );
-			add_filter( 'media_send_to_editor', array( $this, 'media_filter'), 20, 3);
+			add_filter( 'media_send_to_editor', array( $this, 'media_filter'), 20, 2);
 			add_action( 'admin_menu', array( $this, 'strip_add_admin_menu' ));
 			add_action( 'admin_init', array( $this, 'strip_settings_init' ));
 			add_action( 'embed_oembed_html', array( $this, 'embed_html' ), 10, 4);
+			wp_embed_register_handler( 'detect_lightbox', '#^http://.+\.(jpe?g|gif|png)$#i', array( $this, 'wp_embed_register_handler') , 10, 3);
 		}
 
 		/**
@@ -181,8 +182,7 @@ if( !class_exists( 'Strip_Lightbox' ) ) {
 
 		function embed_html( $html, $url, $args, $post_ID ) {
 
-			$thumbnail = wp_get_attachment_url( get_post_thumbnail_id($post_ID) );
-			$screenshot = isset($thumbnail) ? wp_get_attachment_url( get_post_thumbnail_id($post_ID) ) : 'http://fakeimg.pl/439x230/282828/eae0d0/?text=Click%20to%20Play!';
+			$screenshot = wp_get_attachment_url( get_post_thumbnail_id($post_ID) ) ? wp_get_attachment_url( get_post_thumbnail_id($post_ID) ) : 'http://fakeimg.pl/439x230/282828/eae0d0/?text=Click%20to%20Play!';
 
                         if ( strstr($url, 'youtube.com') || strstr($url, 'vimeo.com')) {
       		        	$html = sprintf('<a href="%1$s" class="strip"><img src="%2$s" /></a>', $url, $screenshot);
@@ -204,13 +204,37 @@ if( !class_exists( 'Strip_Lightbox' ) ) {
 
     			$attachment = get_post($attachment_id);
 
-			if($attachment->post_mime_type == "image") {
+			$types = array('image/jpeg', 'image/gif', 'image/png');
+
+			if(in_array($attachment->post_mime_type, $types) ) {
 				$strip_attr = sprintf('class="strip thumbnail" data-strip-group="gallery-%s" data-strip-options="side: %s"', $attachment->post_parent, $position);
     				$html = '<a href="'. wp_get_attachment_url($attachment_id) .'" '. $strip_attr .'"><img src="'. wp_get_attachment_thumb_url($attachment_id) .'"></a>';
 			}
 
 			return $html;
 		}
+
+        	/**
+         	* convert image urls to oembed with strip markup
+         	*
+         	* @since 1.0
+         	*/
+
+		function wp_embed_register_handler( $matches, $attr, $url, $rawattr ) {
+			global $post;
+
+			$position_option = get_option( 'strip_settings' );
+			$position = "'" . $position_option['strip_select_field'] . "'";
+
+    			if (preg_match('#^http://.+\.(jpe?g|gif|png)$#i', $url)) {
+       	       			$embed = sprintf('<a href="%s" class="strip thumbnail" data-strip-group="gallery-%s" data-strip-options="side: %s"><img src="%s"></a>', $matches[0], $post->ID, $position, $matches[0]);
+    			}
+
+			$embed = apply_filters( 'oembed_detect_lightbox', $embed, $matches, $attr, $url, $rawattr );
+
+    			return apply_filters( 'oembed_result', $embed, $url);
+		}
+
 
         	/**
          	* modified gallery output for strip lightbox
