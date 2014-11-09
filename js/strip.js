@@ -1,5 +1,5 @@
 /*!
- * Strip - A Less Intrusive Responsive Lightbox - v1.2.5
+ * Strip - A Less Intrusive Responsive Lightbox - v1.3.0
  * (c) 2014 Nick Stakenburg
  *
  * http://www.stripjs.com
@@ -23,77 +23,9 @@
 var Strip = {};
 
 $.extend(Strip, {
-  version: '1.2.5'
+  version: '1.3.0'
 });
 
-// unexposed _Skins, for internal use only
-var _Skins = {
-  base: {
-    effects: {
-      spinner: { show: 200, hide: 200 },
-      transition: { min: 175, max: 250 },
-      ui: { show: 0, hide: 200 },
-      window: { show: 300, hide: 300 }
-    },
-    hideOnClickOutside: true,
-    keyboard: {
-      left:  true,
-      right: true,
-      esc:   true
-    },
-    loop: true,
-    overlap: true,
-    preload: [1,2],
-    position: true,
-    side: 'right',
-    toggle: true,
-    uiDelay: 3000,
-    vimeo: {
-      autoplay: 1,
-      api: 1,
-      title: 1,
-      byline: 1,
-      portrait: 0,
-      loop: 0
-    },
-    youtube: {
-      autoplay: 1,
-      controls: 1,
-      enablejsapi: 1,
-      hd: 1,
-      iv_load_policy: 3,
-      loop: 0,
-      modestbranding: 1,
-      rel: 0,
-      vq: 'hd1080' // force hd: http://stackoverflow.com/a/12467865
-    },
-
-    initialTypeOptions: {
-      'image': { },
-      'vimeo': {
-        width: 1280
-      },
-      // Youtube needs both dimensions, it doesn't support fetching video dimensions like Vimeo yet.
-      // Star this ticket if you'd like to get support for it at some point:
-      // https://code.google.com/p/gdata-issues/issues/detail?id=4329
-      'youtube': {
-        width: 1280,
-        height: 720
-      }
-    }
-  },
-
-  // reserved for resetting options on the base skin
-  reset: { }
-};
-
-
-// exposed
-/*
-  If you need set options globally, extend a skin with
-  those options on your page, for example:
-  $.extend(Strip.Skins.strip, { .. your options .. });
-*/
 Strip.Skins = {
   // the default skin
   'strip': { }
@@ -123,23 +55,6 @@ var _slice = Array.prototype.slice;
 var _ = {
   isElement: function(object) {
     return object && object.nodeType == 1;
-  },
-
-  element: {
-    isAttached: (function() {
-      function findTopAncestor(element) {
-        var ancestor = element;
-        while(ancestor && ancestor.parentNode) {
-          ancestor = ancestor.parentNode;
-        }
-        return ancestor;
-      }
-
-      return function(element) {
-        var topAncestor = findTopAncestor(element);
-        return !!(topAncestor && topAncestor.body);
-      };
-    })()
   }
 };
 
@@ -151,29 +66,10 @@ function px(source) {
   return destination;
 }
 
-// deep extend
-function deepExtend(destination, source) {
-  for (var property in source) {
-    if (source[property] && source[property].constructor &&
-      source[property].constructor === Object) {
-      destination[property] = $.extend({}, destination[property]) || {};
-      deepExtend(destination[property], source[property]);
-    } else {
-      destination[property] = source[property];
-    }
-  }
-  return destination;
-}
-
-// deep clone copy
-function deepExtendClone(destination, source) {
-  return deepExtend($.extend({}, destination), source);
-}
-
 
 // Fit
 var Fit = {
-  within: function(dimensions, bounds) {
+  within: function(bounds, dimensions) {
     var options = $.extend({
       height: true,
       width: true
@@ -182,12 +78,6 @@ var Fit = {
     var size  = $.extend({}, dimensions),
         scale = 1,
         attempts = 5;
-
-    // border
-    if (options.border) {
-      bounds.width -= 2 * options.border;
-      bounds.height -= 2 * options.border;
-    }
 
     var fit = { width: options.width, height: options.height };
 
@@ -301,10 +191,18 @@ Support.mobileTouch = Support.touch &&
 
 var Bounds = {
   viewport: function() {
-    return {
+    var dimensions = {
       height: $(window).height(),
       width:  $(window).width()
     };
+
+    // Mobile Safari has a bugged viewport height after scrolling
+    if (Browser.MobileSafari) {
+      var zoom = document.documentElement.clientWidth / window.innerWidth;
+      dimensions.height = window.innerHeight * zoom;
+    }
+
+    return dimensions;
   }
 };
 
@@ -708,70 +606,124 @@ return VimeoReady;
 
 })();
 
-var Options = (function() {
-  var BASE = _Skins.base,
-      RESET = deepExtendClone(BASE, _Skins.reset);
+var Options = {
+  defaults: {
+    effects: {
+      spinner: { show: 200, hide: 200 },
+      transition: { min: 175, max: 250 },
+      ui: { show: 0, hide: 200 },
+      window: { show: 300, hide: 300 }
+    },
+    hideOnClickOutside: true,
+    keyboard: {
+      left:  true,
+      right: true,
+      esc:   true
+    },
+    loop: true,
+    overlap: true,
+    preload: [1,2],
+    position: true,
+    skin: 'strip',
+    side: 'right',
+    spinner: true,
+    toggle: true,
+    uiDelay: 3000,
+    vimeo: {
+      autoplay: 1,
+      api: 1,
+      title: 1,
+      byline: 1,
+      portrait: 0,
+      loop: 0
+    },
+    youtube: {
+      autoplay: 1,
+      controls: 1,
+      enablejsapi: 1,
+      hd: 1,
+      iv_load_policy: 3,
+      loop: 0,
+      modestbranding: 1,
+      rel: 0,
+      vq: 'hd1080' // force hd: http://stackoverflow.com/a/12467865
+    },
 
-  function create(options, type, data) {
-    options = options || {};
+    initialTypeOptions: {
+      'image': { },
+      'vimeo': {
+        width: 1280
+      },
+      // Youtube needs both dimensions, it doesn't support fetching video dimensions like Vimeo yet.
+      // Star this ticket if you'd like to get support for it at some point:
+      // https://code.google.com/p/gdata-issues/issues/detail?id=4329
+      'youtube': {
+        width: 1280,
+        height: 720
+      }
+    }
+  },
+
+  create: function(opts, type, data) {
+    opts = opts || {};
     data = data || {};
 
-    options.skin = options.skin || Window.defaultSkin;
+    opts.skin = opts.skin || this.defaults.skin;
 
-    var SELECTED = options.skin ? $.extend({}, Strip.Skins[options.skin] || Strip.Skins[Window.defaultSkin]) : { },
-        MERGED_SELECTED = deepExtendClone(RESET, SELECTED);
+    var selected = opts.skin ? $.extend({}, Strip.Skins[opts.skin] || Strip.Skins[this.defaults.skin]) : {},
+        merged = $.extend(true, {}, this.defaults, selected);
 
-    // first merge the default type options with those of the selected skin
-    // put the initial options on there based on the given type
-    if (type && MERGED_SELECTED.initialTypeOptions[type]) {
-      MERGED_SELECTED = deepExtendClone(MERGED_SELECTED.initialTypeOptions[type], MERGED_SELECTED);
-      delete MERGED_SELECTED.initialTypeOptions; // these aren't used further, so remove them
+    // merge initial type options
+    if (merged.initialTypeOptions) {
+      if (type && merged.initialTypeOptions[type]) {
+        merged = $.extend(true, {}, merged.initialTypeOptions[type], merged);
+      }
+      // these aren't used further, so remove them
+      delete merged.initialTypeOptions;
     }
 
-    var MERGED = deepExtendClone(MERGED_SELECTED, options);
-
-    // now we have a safe MERGED object to work with
+    // safe options to work with
+    var options = $.extend(true, {}, merged, opts);
 
     // set all effect duration to 0 for effects: false
     // IE8 and below never use effects
-    if (!MERGED.effects || (Browser.IE && Browser.IE < 9)) {
-      MERGED.effects = {};
-      $.each(BASE.effects, function(name, effect) {
-        $.each((MERGED.effects[name] = $.extend({}, effect)), function(option) {
-          MERGED.effects[name][option] = 0;
+    if (!options.effects || (Browser.IE && Browser.IE < 9)) {
+      options.effects = {};
+      $.each(this.defaults.effects, function(name, effect) {
+        $.each((options.effects[name] = $.extend({}, effect)), function(option) {
+          options.effects[name][option] = 0;
         });
       });
+
+      // disable the spinner when effects are disabled
+      options.spinner = false;
     }
 
     // keyboard
-    if (MERGED.keyboard) {
+    if (options.keyboard) {
       // when keyboard is true, enable all keys
-      if ($.type(MERGED.keyboard) == 'boolean') {
-        MERGED.keyboard = {};
-        $.each(BASE.keyboard, function(key, bool) {
-          MERGED.keyboard[key] = true;
+      if ($.type(options.keyboard) == 'boolean') {
+        options.keyboard = {};
+        $.each(this.defaults.keyboard, function(key, bool) {
+          options.keyboard[key] = true;
         });
       }
 
       // disable left and right keys for video, because players like
       // youtube use these keys
       if (type == 'vimeo' || type == 'youtube') {
-        $.extend(MERGED.keyboard, { left: false, right: false });
+        $.extend(options.keyboard, { left: false, right: false });
       }
     }
 
     // vimeo & youtube always have no overlap
     if (type == 'vimeo' || type == 'youtube') {
-      MERGED.overlap = false;
+      options.overlap = false;
     }
 
-    return MERGED;
+    return options;
   }
-
-  return {
-    create: create
-  };
-})();
+};
 
 function View() { this.initialize.apply(this, _slice.call(arguments)); }
 $.extend(View.prototype, {
@@ -1024,7 +976,8 @@ var Pages = {
 };
 
 var Page = (function() {
-var uid = 0;
+var uid = 0,
+    loadedUrlCache = {};
 
 function Page() { return this.initialize.apply(this, _slice.call(arguments)); };
 $.extend(Page.prototype, {
@@ -1151,15 +1104,14 @@ $.extend(Page.prototype, {
 
     this.preloading = true;
 
-
-    new ImageReady(this.content[0], $.proxy(function(image) {
+    new ImageReady(this.content[0], $.proxy(function(imageReady) {
       this.loaded = true;
       this.preloading = false;
       this.preloaded = true;
 
       this.dimensions = {
-        width: image.naturalWidth,
-        height: image.naturalHeight
+        width: imageReady.naturalWidth,
+        height: imageReady.naturalHeight
       };
     }, this));
   },
@@ -1169,7 +1121,6 @@ $.extend(Page.prototype, {
   load: function(callback, isPreload) {
     // make sure the page is created
     this.create();
-
 
     // exit early if already loaded
     if (this.loaded) {
@@ -1184,7 +1135,10 @@ $.extend(Page.prototype, {
     this.loading = true;
 
     // start spinner
-    Window.startLoading();
+    // only when this url hasn't been loaded before
+    if (this.view.options.spinner && !loadedUrlCache[this.view.url]) {
+      Window.startLoading();
+    }
 
     switch(this.view.type) {
       case 'image':
@@ -1195,13 +1149,13 @@ $.extend(Page.prototype, {
           return;
         }
 
-        this.imageReady = new ImageReady(this.content[0], $.proxy(function(image) {
+        this.imageReady = new ImageReady(this.content[0], $.proxy(function(imageReady) {
           // mark as loaded
           this._markAsLoaded();
 
           this.dimensions = {
-            width: image.naturalWidth,
-            height: image.naturalHeight
+            width: imageReady.naturalWidth,
+            height: imageReady.naturalHeight
           };
 
           if (callback) callback();
@@ -1257,6 +1211,11 @@ $.extend(Page.prototype, {
   _markAsLoaded: function() {
     this.loading = false;
     this.loaded = true;
+
+    // mark url as loaded so we can avoid
+    // showing the spinner again
+    loadedUrlCache[this.view.url] = true;
+
     Window.stopLoading();
   },
 
@@ -1326,7 +1285,7 @@ $.extend(Page.prototype, {
     shq.queue($.proxy(function(next_loaded) {
 
       // give the spinner the options of this page
-      if (Window._spinner) {
+      if (this.view.options.spinner && Window._spinner) {
         Window.setSpinnerSkin(this.view.options.skin);
         Window._spinner.setOptions(this.view.options.effects.spinner);
         Window._spinner.refresh();
@@ -1511,7 +1470,7 @@ $.extend(Page.prototype, {
     if (options.maxWidth) bounds.width = options.maxWidth;
     if (options.maxHeight) bounds.heigth = options.maxHeight;
 
-    dimensions = Fit.within(dimensions, bounds);
+    dimensions = Fit.within(bounds, dimensions);
 
     return dimensions;
   },
@@ -1532,8 +1491,12 @@ $.extend(Page.prototype, {
 
     // add the safety
     Window.element.removeClass('strp-measured');
-    var safety = parseInt(Window.element.css('margin-' + (z == 'width' ? 'left' : 'bottom')));
+    var win = Window.element,
+        isFullscreen = (z == 'width') ? parseInt(win.css('min-width')) > 0 :
+                       parseInt(win.css('min-height')) > 0;
+        safety = isFullscreen ? 0 : parseInt(win.css('margin-' + (z == 'width' ? 'left' : 'bottom')));
     Window.element.addClass('strp-measured');
+
     bounds[z] -= safety;
 
     var paddingX = parseInt(container.css('padding-left')) + parseInt(container.css('padding-right')),
@@ -1543,7 +1506,7 @@ $.extend(Page.prototype, {
     bounds.width -= paddingX;
     bounds.height -= paddingY;
 
-    var fitted = Fit.within(dimensions, bounds),
+    var fitted = Fit.within(bounds, dimensions),
         contentDimensions = $.extend({}, fitted),
         content = this.content;
 
@@ -1566,7 +1529,9 @@ $.extend(Page.prototype, {
 
       // width
       if (z == 'width') {
-        page.css({ width: fitted.width + paddingX + 'px' });
+        page.css({
+          width: (isFullscreen ? viewport.width : fitted.width + paddingX) + 'px'
+        });
 
         var initialBoundsHeight = bounds.height;
 
@@ -1576,7 +1541,7 @@ $.extend(Page.prototype, {
 
         bounds.height = initialBoundsHeight - cH;
 
-        contentDimensions = Fit.within(dimensions, bounds);
+        contentDimensions = Fit.within(bounds, dimensions);
 
         // left/right requires further adjustment of the caption
         var initialImageSize = $.extend({}, contentDimensions),
@@ -1585,7 +1550,7 @@ $.extend(Page.prototype, {
             previousCH,
             shrunkW;
 
-        var attempts = 4;
+        var attempts = isFullscreen ? 0 : 4; // fullscreen doesn't need extra resizing
 
         while (attempts > 0 && (shrunkW = fitted.width - contentDimensions.width)) {
           page.css({ width: (fitted.width + paddingX - shrunkW) + 'px' });
@@ -1606,7 +1571,7 @@ $.extend(Page.prototype, {
             // we try again with the increased caption
             bounds.height = initialBoundsHeight - cH;
 
-            contentDimensions = Fit.within(dimensions, bounds);
+            contentDimensions = Fit.within(bounds, dimensions);
 
             // restore if the last attempt failed
             if (attempts - 1 <= 0) {
@@ -1624,7 +1589,7 @@ $.extend(Page.prototype, {
         // fix IE7 not respecting width:100% in the CSS
         // so info height is measured correctly
         if (Browser.IE && Browser.IE < 8) {
-          page.css({ width: Bounds.viewport().width });
+          page.css({ width: viewport.width });
         }
 
         // height
@@ -1633,7 +1598,7 @@ $.extend(Page.prototype, {
         content.show();
 
         bounds.height -= cH;
-        contentDimensions = Fit.within(dimensions, bounds);
+        contentDimensions = Fit.within(bounds, dimensions);
         fitted.height = contentDimensions.height;
       }
 
@@ -1644,19 +1609,37 @@ $.extend(Page.prototype, {
 
 
     // page needs a fixed width to remain properly static during animation
+    var pageDimensions = {
+      width: fitted.width + paddingX,
+      height: fitted.height + paddingY + cH
+    };
+    // fullscreen mode uses viewport dimensions for the page
+    if (isFullscreen) pageDimensions = viewport;
+
     if (z == 'width') {
-      page.css({ width: fitted.width + paddingX + 'px' });
+      page.css({ width: pageDimensions.width + 'px' });
     } else {
-      page.css({ height: fitted.height + paddingY + cH + 'px' });
+      page.css({ height: pageDimensions.height + 'px' });
     }
 
     container.css({ bottom: cH + 'px' });
 
+
+    // margins
+    var mLeft = -.5 * contentDimensions.width,
+        mTop  = -.5 * contentDimensions.height;
+
+    // floor margins on IE6-7 because it doesn't render .5px properly
+    if (Browser.IE && Browser.IE < 8) {
+      mLeft = Math.floor(mLeft);
+      mTop = Math.floor(mTop);
+    }
+
     content.css(px($.extend({}, contentDimensions, {
-      // floor because old IE doesn't render .5px properly
-      'margin-left': Math.floor(-.5 * contentDimensions.width),
-      'margin-top': Math.floor(-.5 * contentDimensions.height)
+      'margin-left': mLeft,
+      'margin-top': mTop
     })));
+
 
     if (this.playerIframe) {
       this.playerIframe.attr(contentDimensions);
@@ -1665,8 +1648,8 @@ $.extend(Page.prototype, {
     this.contentDimensions = contentDimensions;
 
     // store for later use within animation
-    this.width = fitted.width + paddingX;
-    this.height = fitted.height + paddingY + cH;
+    this.width = pageDimensions.width;
+    this.height = pageDimensions.height;
 
     this.z = this[z];
   }
@@ -1676,8 +1659,6 @@ return Page;
 })();
 
 var Window = {
-  defaultSkin: 'strip',
-
   initialize: function() {
     this.queues = [];
     this.queues.hide = $({});
@@ -1687,7 +1668,7 @@ var Window = {
     this.timers = new Timers();
 
     this.build();
-    this.setSkin(this.defaultSkin);
+    this.setSkin(Options.defaults.skin);
   },
 
   build: function() {
@@ -1777,10 +1758,6 @@ var Window = {
     this._spinner.refresh();
 
     this._spinnerSkin = skin;
-  },
-
-  setDefaultSkin: function(skin) {
-    this.defaultSkin = skin;
   },
 
 
@@ -2412,22 +2389,22 @@ var Window = {
   },
 
   // UI Timer
-  clearUITimer: function() { this.timers.clear('ui'); },
+  // not used on mobile-touch based devices
+  clearUITimer: function() {
+    if (Support.mobileTouch) return;
+
+    this.timers.clear('ui');
+  },
 
   startUITimer: function() {
+    if (Support.mobileTouch) return;
+
     this.clearUITimer();
     this.timers.set('ui', $.proxy(function(){
       this.hideUI();
     }, this), this.view ? this.view.options.uiDelay : 0);
   }
 };
-
-// don't hide the UI on mobile
-if (Support.mobileTouch) {
-  $.each('showUI hideUI clearUITimer startUITimer'.split(' '), function(i, fn) {
-    Window[fn] = function() { };
-  });
-}
 
 //  Keyboard
 //  keeps track of keyboard events when enabled
@@ -2693,7 +2670,7 @@ $.extend(Strip, {
   },
 
   setDefaultSkin: function(skin) {
-    Window.setDefaultSkin(skin);
+    Options.defaults.skin = skin;
     return this;
   }
 });
