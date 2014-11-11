@@ -74,18 +74,6 @@ if( !class_exists( 'Strip_Lightbox' ) ) {
 		}
 
 		/**
-		 * check if settings exist
-		 *
-		 * @since 1.0
-		 */
-
-		function strip_settings_exist(  ) { 
-			if( false == get_option( 'strip_settings' ) ) { 
-				add_option( 'strip_settings' );
-			}
-		}
-
-		/**
 		 * adding settings section and fields
 		 *
 		 * @since 1.0
