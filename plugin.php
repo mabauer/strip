@@ -80,8 +80,8 @@ if( !class_exists( 'Strip_Lightbox' ) ) {
 		 */
 
 		function strip_settings_exist(  ) { 
-			if( false == get_option( 'strip_lightbox_settings' ) ) { 
-				add_option( 'strip_lightbox_settings' );
+			if( false == get_option( 'strip_settings' ) ) { 
+				add_option( 'strip_settings' );
 			}
 		}
 
@@ -94,6 +94,15 @@ if( !class_exists( 'Strip_Lightbox' ) ) {
 		function strip_settings_init() { 
 
 			register_setting( 'strip_plugin_page', 'strip_settings' );
+
+			if( false == get_option( 'strip_settings' ) ) { 
+
+				$defaults = array(
+					'strip_select_field' => 'left'
+				);
+
+				add_option( 'strip_settings', $defaults );
+			}
 
 			add_settings_section(
 				'strip_plugin_page_section', 
@@ -109,6 +118,8 @@ if( !class_exists( 'Strip_Lightbox' ) ) {
 				'strip_plugin_page', 
 				'strip_plugin_page_section' 
 			);
+
+
 		}
 
 		/**
