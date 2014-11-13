@@ -18,7 +18,6 @@
  * @package Strip_Lightbox
  */
 
-
 if ( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly
 
 /**
@@ -159,7 +158,7 @@ if( !class_exists( 'Strip_Lightbox' ) ) {
 
 		function scripts() {
 
-			// load minified version if SCRIPT_DEBUG is true
+			// load full version if SCRIPT_DEBUG is true
 			$min = ( defined( 'SCRIPT_DEBUG' ) && true == SCRIPT_DEBUG ) ? '' : '.min';
 
 			wp_enqueue_script('strip_js', plugins_url(sprintf( 'js/strip%s.js', $min ), __FILE__), array( 'jquery' ), '1.0', true);
