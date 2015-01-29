@@ -186,11 +186,14 @@ if( !class_exists( 'Strip_Lightbox' ) ) {
 		 */
 
 		function woo_remove_lightboxes() {
-  			wp_dequeue_style( 'woocommerce_prettyPhoto_css' );
-  			wp_dequeue_script( 'prettyPhoto' );
-  			wp_dequeue_script( 'prettyPhoto-init' );
-  			wp_dequeue_script( 'fancybox' );
-  			wp_dequeue_script( 'enable-lightbox' );
+
+			if ( in_array( 'woocommerce/woocommerce.php', apply_filters('active_plugins', get_option( 'active_plugins' ) ) ) ) {
+  				wp_dequeue_style( 'woocommerce_prettyPhoto_css' );
+  				wp_dequeue_script( 'prettyPhoto' );
+  				wp_dequeue_script( 'prettyPhoto-init' );
+  				wp_dequeue_script( 'fancybox' );
+  				wp_dequeue_script( 'enable-lightbox' );
+			}
 		}
 
 		/**
