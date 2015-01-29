@@ -21,8 +21,14 @@ Custom Styling for Images:
 
 If you wish to customize the styling of the images, edit custom.css in the css directory
 
-Extras:
-This plugin supports the video thumbnails plugin for automatic video thumbnails.
+Plugin Support:
+
+1. Video Thumbnails and Video Thumbnails Pro (for automatic thumbnails)
+2. WooCommerce for product images.
+
+Todo:
+
+1. Add stylesheet override in theme directory.
 
 Notice: If you plan on using this on a commercial site please purchase a commercial license.
 
