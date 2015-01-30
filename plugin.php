@@ -176,7 +176,16 @@ if( !class_exists( 'Strip_Lightbox' ) ) {
 
 		function styles() {
 			wp_enqueue_style( 'strip_css', plugins_url( 'css/strip.css', __FILE__ ), false, '1.0', 'screen' );
-			wp_enqueue_style( 'custom_css', plugins_url( 'css/custom.css', __FILE__ ), false, '1.0', 'screen' );
+
+
+			if ( @file_exists( get_stylesheet_directory() . '/strip_custom.css' ) )
+				$css_file = get_stylesheet_directory_uri() . '/strip_custom.css';
+			elseif ( @file_exists( get_template_directory() . '/strip_custom.css' ) )
+				$css_file = get_template_directory_uri() . '/strip_custom.css';
+			else
+				$css_file = plugins_url( 'css/custom.css', __FILE__ );
+
+			wp_enqueue_style( 'strip_custom_css', $css_file, false, '1.0', 'screen' );
 		}
 
 		/**
@@ -402,3 +411,5 @@ if( !class_exists( 'Strip_Lightbox' ) ) {
 		}
    	}
 }
+
+
