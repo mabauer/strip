@@ -61,8 +61,8 @@ if( !class_exists( 'Strip_Lightbox' ) ) {
 			add_action( 'embed_oembed_html', array( $this, 'embed_html' ), 10, 4);
 			add_action( 'init', array( $this, 'embeds' ));
 			add_action( 'wp_enqueue_scripts', array( $this, 'woo_remove_lightboxes'), 99 );
-			add_filter('woocommerce_single_product_image_html', array( $this, 'strip_woocommerce_lightbox'), 99, 1); 
-			add_filter('woocommerce_single_product_image_thumbnail_html', array( $this, 'strip_woocommerce_lightbox'), 99, 1); 
+			add_filter( 'woocommerce_single_product_image_html', array( $this, 'strip_woocommerce_lightbox'), 99, 1); 
+			add_filter( 'woocommerce_single_product_image_thumbnail_html', array( $this, 'strip_woocommerce_lightbox'), 99, 1); 
 		}
 
 		/**
