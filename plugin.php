@@ -1,13 +1,13 @@
 <?php
 /**
  * Plugin Name: Strip Lightbox
- * Plugin URI: http://github.com/chrismccoy/strip
+ * Plugin URI: http://github.com/sugar/strip
  * Description: Use this plugin to implement the strip lightbox
  * Version: 1.0
  * Author: Chris McCoy
  * Author URI: http://github.com/chrismccoy
 
- * @copyright 2014
+ * @copyright 2015
  * @author Chris McCoy
  * @license http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
  *
