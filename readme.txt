@@ -6,7 +6,7 @@ This plugin will implement the strip lightbox into WordPress
 Installation Instructions:
 
 1. Activate the Plugin
-2. Goto Settings -> Strip Options and Select the Position of the lightbox
+2. Goto Settings -> Strip Options and Select the Position of the Lightbox
 
 How to use this Plugin for Images:
 
