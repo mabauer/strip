@@ -244,8 +244,10 @@ if( !class_exists( 'Strip_Lightbox' ) ) {
 			$types = array('image/jpeg', 'image/gif', 'image/png');
 
 			if(in_array($attachment->post_mime_type, $types) ) {
+				$srcset = (wp_get_attachment_image_srcset( $attachment_id, 'thumbnail')) ? 'srcset="' . wp_get_attachment_image_srcset( $attachment_id, 'thumbnail') . '" ' : '';
+				$sizes = (wp_get_attachment_image_sizes( $attachment_id, 'thumbnail')) ? 'sizes="' . wp_get_attachment_image_sizes( $attachment_id, 'thumbnail') . '"' : '';
 				$strip_attr = sprintf('class="strip thumbnail" data-strip-group="gallery-%s" data-strip-options="side: %s"', $attachment->post_parent, $position);
-    				$html = '<a href="'. wp_get_attachment_url($attachment_id) .'" '. $strip_attr .'"><img src="'. wp_get_attachment_thumb_url($attachment_id) .'"></a>';
+    				$html = '<a href="'. wp_get_attachment_url($attachment_id) .'" '. $strip_attr .'"><img src="'. wp_get_attachment_thumb_url($attachment_id) .'" '. $srcset . $sizes .'></a>';
 			}
 
 			return $html;
@@ -396,8 +398,10 @@ if( !class_exists( 'Strip_Lightbox' ) ) {
 				$position = "'" . $position_option['strip_select_field'] . "'";
 
     				foreach ( $attachments as $id => $attachment ) {
+					$srcset = (wp_get_attachment_image_srcset( $id, 'thumbnail')) ? 'srcset="' . wp_get_attachment_image_srcset( $id, 'thumbnail') . '" ' : '';
+					$sizes = (wp_get_attachment_image_sizes( $id, 'thumbnail')) ? 'sizes="' . wp_get_attachment_image_sizes( $id, 'thumbnail') . '"' : '';
 					$strip_attr = sprintf('class="strip thumbnail" data-strip-group="gallery-%s" data-strip-caption="%s" data-strip-options="side: %s"', $post->ID, $post->post_title, $position);
-        				$output .= '<a href="'. wp_get_attachment_url($id) .'" '. $strip_attr. '"><img src="'. wp_get_attachment_thumb_url($id) .'" class="strip thumbnail"></a>' . "\n";
+        				$output .= '<a href="'. wp_get_attachment_url($id) .'" '. $strip_attr. '"><img src="'. wp_get_attachment_thumb_url($id) .'" class="strip thumbnail" '. $srcset  . $sizes .'></a>' . "\n";
     				}
 
     				$output .= "</div>" . "\n";
