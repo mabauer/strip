@@ -59,6 +59,7 @@ if( !class_exists( 'Strip_Lightbox' ) ) {
 			add_action( 'admin_menu', array( $this, 'strip_add_admin_menu' ));
 			add_action( 'admin_init', array( $this, 'strip_settings_init' ));
 			add_action( 'embed_oembed_html', array( $this, 'embed_html' ), 10, 4);
+			add_action( 'embed_oembed_html', array( $this, 'cloudup_embed_html' ), 10, 4);
 			add_action( 'init', array( $this, 'embeds' ));
 			add_action( 'wp_enqueue_scripts', array( $this, 'woo_remove_lightboxes'), 99 );
 			add_filter( 'woocommerce_single_product_image_html', array( $this, 'strip_woocommerce_lightbox'), 99, 1); 
@@ -224,6 +225,24 @@ if( !class_exists( 'Strip_Lightbox' ) ) {
                         if ( strstr($url, 'youtube.com') || strstr($url, 'vimeo.com')) {
       		        	$html = sprintf('<a href="%1$s" class="strip"><img src="%2$s" /></a>', $url, $screenshot);
         	        }
+
+                     	return $html;
+            	}
+
+        	/**
+         	* filter cloudup images for lightbox
+         	*
+         	* @since 1.0
+         	*/
+
+		function cloudup_embed_html( $html, $url, $args, $post_ID ) {
+
+        		if(preg_match('/<a href="(https?:\/\/cloudup\.com\/.*)"><img [^>]*src=\"(https?:\/\/cldup\.com\/[^\"]+)\"[^>]*><\/a>/', $html, $matches)) {
+				$position_option = get_option( 'strip_settings' );
+				$position = "'" . $position_option['strip_select_field'] . "'";
+				$strip_attr = sprintf('class="strip thumbnail" data-strip-options="side: %s"', $position);
+    				$html = '<a href="'. $matches[2] .'" '. $strip_attr .'><img src="'. $matches[2].'"></a>';
+        		}
 
                      	return $html;
             	}
@@ -410,5 +429,3 @@ if( !class_exists( 'Strip_Lightbox' ) ) {
 		}
    	}
 }
-
-
