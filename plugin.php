@@ -61,9 +61,6 @@ if( !class_exists( 'Strip_Lightbox' ) ) {
 			add_action( 'embed_oembed_html', array( $this, 'embed_html' ), 10, 4);
 			add_action( 'embed_oembed_html', array( $this, 'cloudup_embed_html' ), 10, 4);
 			add_action( 'init', array( $this, 'embeds' ));
-			add_action( 'wp_enqueue_scripts', array( $this, 'woo_remove_lightboxes'), 99 );
-			add_filter( 'woocommerce_single_product_image_html', array( $this, 'strip_woocommerce_lightbox'), 99, 1); 
-			add_filter( 'woocommerce_single_product_image_thumbnail_html', array( $this, 'strip_woocommerce_lightbox'), 99, 1); 
 		}
 
 		/**
@@ -185,23 +182,6 @@ if( !class_exists( 'Strip_Lightbox' ) ) {
 		}
 
 		/**
-		 * remove default woocommerce lightbox and styles
-		 *
-		 * @since 1.0
-		 */
-
-		function woo_remove_lightboxes() {
-
-			if ( in_array( 'woocommerce/woocommerce.php', apply_filters('active_plugins', get_option( 'active_plugins' ) ) ) ) {
-  				wp_dequeue_style( 'woocommerce_prettyPhoto_css' );
-  				wp_dequeue_script( 'prettyPhoto' );
-  				wp_dequeue_script( 'prettyPhoto-init' );
-  				wp_dequeue_script( 'fancybox' );
-  				wp_dequeue_script( 'enable-lightbox' );
-			}
-		}
-
-		/**
 		 * register oembed for images, and remove imgur.com default embed so lightbox can use imgur.com images
 		 *
 		 * @since 1.0
@@ -291,31 +271,6 @@ if( !class_exists( 'Strip_Lightbox' ) ) {
 			$embed = apply_filters( 'oembed_detect_lightbox', $embed, $matches, $attr, $url, $rawattr );
 
     			return apply_filters( 'oembed_result', $embed, $url);
-		}
-
-        	/**
-         	* alter woocommerce image output for strip lightbox
-         	*
-         	* @since 1.0
-         	*/
-		function strip_woocommerce_lightbox($html) {
-
-   			$search = array(
-				'class="woocommerce-main-image zoom"',
-				'data-rel="prettyPhoto[product-gallery]"',
-				'class="attachment-shop_thumbnail"',
-				'class="zoom first"'
-  			);
-
-   			$replace = array(
-				'class="strip"',
-				'data-strip-group="[product-gallery]"',
-				'',
-				'class="strip"'
-			);
-
-   			$html = str_replace($search, $replace, $html);
-   			return $html;
 		}
 
         	/**
