@@ -54,6 +54,8 @@ if( !class_exists( 'Strip_Lightbox' ) ) {
 		function __construct() {
 			add_action( 'wp_enqueue_scripts', array( $this, 'scripts' ) );
 			add_action( 'wp_enqueue_scripts', array( $this, 'styles' ) );
+			add_filter( 'envira_gallery_output', array($this, 'envira_gallery_output'), 10, 2 );
+			add_filter( 'envira_gallery_output_link_attr', array($this, 'envira_gallery_output_link_attr') ,20, 4 );
 			add_filter( 'post_gallery', array( $this, 'gallery'), 10, 2 );
 			add_filter( 'media_send_to_editor', array( $this, 'media_filter'), 20, 2);
 			add_action( 'admin_menu', array( $this, 'strip_add_admin_menu' ));
@@ -249,6 +251,31 @@ if( !class_exists( 'Strip_Lightbox' ) ) {
     				$html = '<a href="'. wp_get_attachment_url($attachment_id) .'" '. $strip_attr .'"><img src="'. wp_get_attachment_thumb_url($attachment_id) .'" '. $srcset . $sizes .'></a>';
 			}
 
+			return $html;
+		}
+
+        	/**
+         	* add strip data attribs to envira gallery links
+         	*
+         	* @since 1.0
+         	*/
+
+		function envira_gallery_output_link_attr( $attrs, $item, $data, $i ) {
+   			$gallery_item = $i['gallery'][$item];
+   			$caption = $gallery_item['caption'];
+   			$group_id = $i['id'];
+   			$stripjs = ' data-strip-group="envira-gallery-'. $group_id .'" data-strip-caption="'. $caption .'"';
+   			return $attrs . $stripjs;
+		}
+
+        	/**
+         	* add strip class to envira gallery links
+         	*
+         	* @since 1.0
+         	*/
+
+		function envira_gallery_output( $html, $data ) {
+			$html = str_replace( 'envira-gallery-link', 'envira-gallery-link strip', $html);
 			return $html;
 		}
 
