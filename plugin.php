@@ -1,13 +1,13 @@
 <?php
 /**
  * Plugin Name: Strip Lightbox
- * Plugin URI: http://github.com/sugar/strip
+ * Plugin URI: http://github.com/chrismccoy/strip
  * Description: Use this plugin to implement the strip lightbox
  * Version: 1.0
  * Author: Chris McCoy
  * Author URI: http://github.com/chrismccoy
 
- * @copyright 2015
+ * @copyright 2017
  * @author Chris McCoy
  * @license http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
  *
@@ -58,8 +58,7 @@ if( !class_exists( 'Strip_Lightbox' ) ) {
 			add_filter( 'media_send_to_editor', array( $this, 'media_filter'), 20, 2);
 			add_action( 'admin_menu', array( $this, 'strip_add_admin_menu' ));
 			add_action( 'admin_init', array( $this, 'strip_settings_init' ));
-			add_action( 'embed_oembed_html', array( $this, 'embed_html' ), 10, 4);
-			add_action( 'embed_oembed_html', array( $this, 'cloudup_embed_html' ), 10, 4);
+			add_filter( 'oembed_dataparse', array($this, 'oembed_services'), 10, 3);
 			add_action( 'init', array( $this, 'embeds' ));
 		}
 
@@ -182,50 +181,67 @@ if( !class_exists( 'Strip_Lightbox' ) ) {
 		}
 
 		/**
-		 * register oembed for images, and remove imgur.com default embed so lightbox can use imgur.com images
+		 * register oembed for image urls for the lightbox
 		 *
 		 * @since 1.0
 		 */
 
-		function embeds() { 
-			wp_embed_register_handler( 'detect_lightbox', '#^http://.+\.(jpe?g|gif|png)$#i', array( $this, 'wp_embed_register_handler') , 10, 3);
-			wp_oembed_remove_provider( '#https?://(.+\.)?imgur\.com/.*#i' );
+		function embeds() {
+			wp_embed_register_handler( 'detect_lightbox', '#^https?://.+\.(jpe?g|gif|png)$#i', array( $this, 'wp_embed_register_handler') , 10, 3);
 		}
 
         	/**
-         	* filter youtube and vimeo videos for lightbox
+         	* convert image urls to oembed with strip markup
          	*
          	* @since 1.0
          	*/
 
-		function embed_html( $html, $url, $args, $post_ID ) {
+		function wp_embed_register_handler( $matches, $attr, $url, $rawattr ) {
+			global $post;
 
-			$screenshot = wp_get_attachment_url( get_post_thumbnail_id($post_ID) ) ? wp_get_attachment_url( get_post_thumbnail_id($post_ID) ) : 'http://fakeimg.pl/439x230/282828/eae0d0/?text=Click%20to%20Play!';
+			$position_option = get_option( 'strip_settings' );
+			$position = "'" . $position_option['strip_select_field'] . "'";
+    	       		$embed = sprintf('<a href="%s" class="strip thumbnail" data-strip-group="gallery-%s" data-strip-options="side: %s"><img src="%s" width="%d" height="%d" /></a>', $url, $post->ID, $position, $url, get_option('thumbnail_size_w'), get_option('thumbnail_size_h'));
+			$embed = apply_filters( 'oembed_detect_lightbox', $embed, $matches, $attr, $url, $rawattr );
 
-                        if ( strstr($url, 'youtube.com') || strstr($url, 'vimeo.com')) {
-      		        	$html = sprintf('<a href="%1$s" class="strip"><img src="%2$s" /></a>', $url, $screenshot);
-        	        }
-
-                     	return $html;
-            	}
+    			return apply_filters( 'oembed_result', $embed, $url);
+		}
 
         	/**
-         	* filter cloudup images for lightbox
+         	* filter instagram, flickr, cloudup, imgur, youtube, and vimeo for lightbox
          	*
          	* @since 1.0
          	*/
 
-		function cloudup_embed_html( $html, $url, $args, $post_ID ) {
+		function oembed_services($html, $data, $url) {
 
-        		if(preg_match('/<a href="(https?:\/\/cloudup\.com\/.*)"><img [^>]*src=\"(https?:\/\/cldup\.com\/[^\"]+)\"[^>]*><\/a>/', $html, $matches)) {
-				$position_option = get_option( 'strip_settings' );
-				$position = "'" . $position_option['strip_select_field'] . "'";
-				$strip_attr = sprintf('class="strip thumbnail" data-strip-options="side: %s"', $position);
-    				$html = '<a href="'. $matches[2] .'" '. $strip_attr .'><img src="'. $matches[2].'"></a>';
-        		}
+			$position_option = get_option( 'strip_settings' );
+			$position = "'" . $position_option['strip_select_field'] . "'";
 
-                     	return $html;
-            	}
+        		if ($data->provider_name == 'Instagram') {
+                		$html = sprintf('<a href="%s" class="strip thumbnail" data-strip-options="side: %s"><img src="%s" width="%d" height="%d" /></a>', esc_url($data->thumbnail_url), $position, esc_url($data->thumbnail_url), get_option('thumbnail_size_w'), get_option('thumbnail_size_h'));
+			}
+
+        		if ($data->provider_name == 'Flickr') {
+				$url = str_replace('_z.jpg','_b.jpg', $data->url);
+                		$html = sprintf('<a href="%s" class="strip thumbnail" data-strip-options="side: %s"><img src="%s" width="%d" height="%d" /></a>', esc_url($url), $position, esc_url($url), get_option('thumbnail_size_w'), get_option('thumbnail_size_h'));
+			}
+
+        		if ($data->provider_name == 'Cloudup') {
+                		$html = sprintf('<a href="%s" class="strip thumbnail" data-strip-options="side: %s"><img src="%s" width="%d" height="%d" /></a>', esc_url(preg_replace('#(\d+)[Xx](\d+)#', '3000x3000', $data->url)), $position, esc_url($data->url),  get_option('thumbnail_size_w'), get_option('thumbnail_size_h'));
+			}
+
+      			if ($data->provider_name == 'Imgur') {
+                		$html = sprintf('<a href="%s" class="strip thumbnail" data-strip-options="side: %s"><img src="%s" width="%d" height="%d" /></a>', esc_url($url), $position, esc_url($url), get_option('thumbnail_size_w'), get_option('thumbnail_size_h'));
+			}
+
+      			if ($data->provider_name == 'YouTube' || $data->provider_name == 'Vimeo') {
+                        	$screenshot = wp_get_attachment_url( get_post_thumbnail_id($post_ID) ) ? wp_get_attachment_url( get_post_thumbnail_id($post_ID) ) : 'http://fakeimg.pl/439x230/282828/eae0d0/?text=Click%20to%20Play!';
+                		$html = sprintf('<a href="%s" class="strip" data-strip-options="side: %s"><img src="%s" /></a>', esc_url($url), $position, $screenshot);
+			}
+
+			return $html;
+		}
 
         	/**
          	* add strip data attributes to images inserted into post
@@ -250,27 +266,6 @@ if( !class_exists( 'Strip_Lightbox' ) ) {
 			}
 
 			return $html;
-		}
-
-        	/**
-         	* convert image urls to oembed with strip markup
-         	*
-         	* @since 1.0
-         	*/
-
-		function wp_embed_register_handler( $matches, $attr, $url, $rawattr ) {
-			global $post;
-
-			$position_option = get_option( 'strip_settings' );
-			$position = "'" . $position_option['strip_select_field'] . "'";
-
-    			if (preg_match('#^http://.+\.(jpe?g|gif|png)$#i', $url)) {
-       	       			$embed = sprintf('<a href="%s" class="strip thumbnail" data-strip-group="gallery-%s" data-strip-options="side: %s"><img src="%s"></a>', $matches[0], $post->ID, $position, $matches[0]);
-    			}
-
-			$embed = apply_filters( 'oembed_detect_lightbox', $embed, $matches, $attr, $url, $rawattr );
-
-    			return apply_filters( 'oembed_result', $embed, $url);
 		}
 
         	/**
