@@ -55,7 +55,7 @@ if( !class_exists( 'Strip_Lightbox' ) ) {
 			add_action( 'wp_enqueue_scripts', array( $this, 'scripts' ) );
 			add_action( 'wp_enqueue_scripts', array( $this, 'styles' ) );
 			add_filter( 'post_gallery', array( $this, 'gallery'), 10, 2 );
-			add_filter( 'media_send_to_editor', array( $this, 'media_filter'), 20, 2);
+			add_filter( 'media_send_to_editor', array( $this, 'media_filter'), 20, 3);
 			add_action( 'admin_menu', array( $this, 'strip_add_admin_menu' ));
 			add_action( 'admin_init', array( $this, 'strip_settings_init' ));
 			add_filter( 'oembed_dataparse', array($this, 'oembed_services'), 10, 3);
@@ -249,19 +249,21 @@ if( !class_exists( 'Strip_Lightbox' ) ) {
          	* @since 1.0
          	*/
 
-		function media_filter($html, $attachment_id) {
+		function media_filter($html, $attachment_id, $metadata) {
 
 			$position_option = get_option( 'strip_settings' );
 			$position = "'" . $position_option['strip_select_field'] . "'";
 
-    			$attachment = get_post($attachment_id);
+    		$attachment = get_post($attachment_id);
 
 			$types = array('image/jpeg', 'image/gif', 'image/png');
 
 			if(in_array($attachment->post_mime_type, $types) ) {
-				$srcset = (wp_get_attachment_image_srcset( $attachment_id, 'thumbnail')) ? 'srcset="' . wp_get_attachment_image_srcset( $attachment_id, 'thumbnail') . '" ' : '';
-				$sizes = (wp_get_attachment_image_sizes( $attachment_id, 'thumbnail')) ? 'sizes="' . wp_get_attachment_image_sizes( $attachment_id, 'thumbnail') . '"' : '';
-				$strip_attr = sprintf('class="strip thumbnail" data-strip-group="gallery-%s" data-strip-options="side: %s"', $attachment->post_parent, $position);
+				$align = !empty($metadata['align']) ? $metadata['align'] : 'none';
+				$size = !empty($metadata['image-size']) ? $metadata['image-size'] : 'thumbnail';
+				$srcset = (wp_get_attachment_image_srcset( $attachment_id, $size)) ? 'srcset="' . wp_get_attachment_image_srcset( $attachment_id, $size) . '" ' : '';
+				$sizes = (wp_get_attachment_image_sizes( $attachment_id, $size)) ? 'sizes="' . wp_get_attachment_image_sizes( $attachment_id, $size) . '"' : '';
+				$strip_attr = sprintf('class="align%s wp-image-%s size-%s strip" data-strip-group="gallery-%s" data-strip-caption="%s" data-strip-options="side: %s"', $align, $attachment_id, $size, $attachment->post_parent, $attachment->post_title, $position);
     				$html = '<a href="'. wp_get_attachment_url($attachment_id) .'" '. $strip_attr .'"><img src="'. wp_get_attachment_thumb_url($attachment_id) .'" '. $srcset . $sizes .'></a>';
 			}
 
@@ -361,17 +363,21 @@ if( !class_exists( 'Strip_Lightbox' ) ) {
         				return $output;
     				}
 
-    				$output = "\n" . '<div class="strip_gallery">' . "\n";
+    				$output = "\n" . sprintf('<div id="gallery-%s" class="gallery gallery-%s gallery-columns-%s strip_gallery">', $instance, $post->ID, $columns) . "\n";
 
 				$position_option = get_option( 'strip_settings' );
 				$position = "'" . $position_option['strip_select_field'] . "'";
 
     				foreach ( $attachments as $id => $attachment ) {
-					$srcset = (wp_get_attachment_image_srcset( $id, 'thumbnail')) ? 'srcset="' . wp_get_attachment_image_srcset( $id, 'thumbnail') . '" ' : '';
-					$sizes = (wp_get_attachment_image_sizes( $id, 'thumbnail')) ? 'sizes="' . wp_get_attachment_image_sizes( $id, 'thumbnail') . '"' : '';
-					$caption = ($attachment->post_excerpt) ? $attachment->post_excerpt : $post->post_title;
-					$strip_attr = sprintf('class="strip thumbnail" data-strip-group="gallery-%s" data-strip-caption="%s" data-strip-options="side: %s"', $post->ID, $caption, $position);
-        				$output .= '<a href="'. wp_get_attachment_url($id) .'" '. $strip_attr. '"><img src="'. wp_get_attachment_thumb_url($id) .'" class="strip thumbnail" '. $srcset  . $sizes .'></a>' . "\n";
+						$output .= '<figure class="gallery-item">' . "\n";
+						$output .= '<div class="gallery-icon">' . "\n";
+						$srcset = (wp_get_attachment_image_srcset( $id, 'thumbnail')) ? 'srcset="' . wp_get_attachment_image_srcset( $id, 'thumbnail') . '" ' : '';
+						$sizes = (wp_get_attachment_image_sizes( $id, 'thumbnail')) ? 'sizes="' . wp_get_attachment_image_sizes( $id, 'thumbnail') . '"' : '';
+						$caption = ($attachment->post_excerpt) ? $attachment->post_excerpt : $post->post_title;
+						$strip_attr = sprintf('class="strip thumbnail" data-strip-group="gallery-%s" data-strip-caption="%s" data-strip-options="side: %s"', $post->ID, $caption, $position);
+						$output .= '<a href="'. wp_get_attachment_url($id) .'" '. $strip_attr. '"><img src="'. wp_get_attachment_thumb_url($id) .'" class="strip thumbnail" '. $srcset  . $sizes .'></a>' . "\n";
+						$output .= "</div>" . "\n";
+						$output .= "</figure>" . "\n";
     				}
 
     				$output .= "</div>" . "\n";
